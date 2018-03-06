@@ -6,83 +6,83 @@ $user_name = $_GET["user_name"];
 $datahoraf = date('d/m/Y h:m:s', time());
 $url = 'http://'.$_SERVER['HTTP_HOST'] . "/rango/";
 
-//lista de sites (remover esta lista se ativar o módulo de putaria)
+//subreddit list (you may edit this list)
 $fontes = [
 "Pizza" => "https://www.reddit.com/r/Pizza",
-"Carne" => "https://www.reddit.com/r/steak",
-"Hambúrguer" => "https://www.reddit.com/r/burgers",
-"Gordice" => "https://www.reddit.com/r/FoodPorn",
+"Steak" => "https://www.reddit.com/r/steak",
+"Hamburguer" => "https://www.reddit.com/r/burgers",
+"Food Porn" => "https://www.reddit.com/r/FoodPorn",
 "Sushi" => "https://www.reddit.com/r/sushi",
-"Pizza sexy" => "https://www.reddit.com/r/sexypizza",
-"Ovo" => "https://www.reddit.com/r/PutAnEggOnIt",
-"Pizza com cerveja" => "https://www.reddit.com/r/beerandpizza",
-"Cerveja" => "https://www.reddit.com/r/beerporn",
-"Doce" => "https://www.reddit.com/r/DessertPorn",
-"Massa" => "https://www.reddit.com/r/pasta",
-"Crepe" => "https://www.reddit.com/r/Crepes",
-"Pão de alho" => "https://www.reddit.com/r/garlicbread/"
+"Sexy Pizza" => "https://www.reddit.com/r/sexypizza",
+"Egg" => "https://www.reddit.com/r/PutAnEggOnIt",
+"Beer and Pizza" => "https://www.reddit.com/r/beerandpizza",
+"Beer" => "https://www.reddit.com/r/beerporn",
+"Dessert" => "https://www.reddit.com/r/DessertPorn",
+"Pasta" => "https://www.reddit.com/r/pasta",
+"Crèpe" => "https://www.reddit.com/r/Crepes",
+"Garlic Bread" => "https://www.reddit.com/r/garlicbread/"
 ];
 
-//compara o que o cidadao escreveu com a lista
+//Compares the command attributes to the word list above
 foreach ($fontes as $chave => $fonte){
 	$similar = similar_text($input, $chave, $percent);
 	$ranking[$chave] = $percent;
 	$urls[$chave] = $fonte;
 }
 
-//determina o escolhido (maior % de similaridade)
+//Chooser the closest match
 $chave = array_keys($ranking, max($ranking))[0]; //array key
 $url = $urls[$chave];							 //array value
 	
-//definir uma gracinha pra falar
-//100% exato, acima de 50% você quis dizer, 
-//abaixo de 50% eu escolho aleatório, 0% aleatório
+//Choose something to say
+//100% exact, higher than 50% did you mean, 
+//lower than 50% I pick one randomly, 0% random
 if (max($ranking) == 100){
-	$mensagem = "Boa escolha! Hoje é dia de " . 
-	array_keys($ranking, max($ranking))[0] . "!";
+	$mensagem = "Good choice! Today is " . 
+	array_keys($ranking, max($ranking))[0] . " day!";
 }
 elseif (max($ranking) > 50){
-	$mensagem = $input . "?! Você quis dizer " . $chave . 
-	"? Se sim, hoje é dia de " . $chave . "!";
+	$mensagem = $input . "?! Did you mean " . $chave . 
+	"? If so, today is " . $chave . " day!";
 }
 elseif (max($ranking) < 50 && max($ranking) != 0) {
 	$chave = array_rand($fontes);
 	$url = $fontes[$chave];
-	$mensagem = "Não tenho nada sobre " . $input . 
-	"... Então, eu decido! Hoje é dia de " . $chave . "!";
+	$mensagem = "I don't have anything related to " . $input . 
+	"... So I pick! Today is " . $chave . " day!";
 }
 else //0%
 {
 	$chave = array_rand($fontes);
 	$url = $fontes[$chave];
-	$mensagem = "Hoje é dia de " . $chave . "!";
+	$mensagem = "Today is " . $chave . " day!";
 	$mensagem .= "\n\n";
-	$mensagem .= "Você pode sugerir " . 
+	$mensagem .= "You may suggest " . 
 				 join(', ', array_slice(array_keys($fontes), 0, -1)) .
-			     " e " . end(array_keys($fontes)) .
-				 ", que é o que eu conheço até agora.";
+			     " and " . end(array_keys($fontes)) .
+				 ", that is what I know so far.";
 }
 
-//faz o download do conteudo
-$json = file_get_contents($url . ".json?limit=100"); //100 posts/pgna
+//download contents
+$json = file_get_contents($url . ".json?limit=100"); //100 posts/page
 $post = cataPost($json); 
 
-//checa se há imagem e gera JSON. Se não, devolve json de erro
+//check if there is any image and gen JSON. if not, reply with json error msg
 if ($post['image_url'] == "" || $post['image_url'] == "self"){
 	devolveJSONruim($command);
 } else {
-	devolveJSON("Abrir original", $post['title_link'], $post['author_name'], 
+	devolveJSON("Open original", $post['title_link'], $post['author_name'], 
 			    $post['author_link'], $post['image_url'], $mensagem);
 	
 	logger($datahoraf . " | " . $command . " | " . $user_name . 
 		   " | " . $channel_id . " | " . $post['title_link']);
 }	
 	
-//cata post random
+//pick random
 function cataPost($j){
 	$obj = json_decode($j);
 	
-	//Escolher um dos 100 posts aleatoriam. da primeira página
+	//Choose one of the 100 posts randomly from the 1st page
 	$i = rand (0, 99);
 
 	//Traz os dados
@@ -97,7 +97,7 @@ function cataPost($j){
 	return $out; 
 }
 
-//retorno de JSON bom
+//good JSON return
 function devolveJSON($t, $tl, $an, $al, $iu, $txt){
 	$attachment = array(
 		"title" => $t,
@@ -122,11 +122,11 @@ function devolveJSON($t, $tl, $an, $al, $iu, $txt){
 	echo $myJSON; 
 }
 
-//retorna json ruim - qdo não tem img
+//bad json return -  no image
 function devolveJSONruim($com){
 	$final  = array(
-		"text" => "Ih... Parece que ~a porcaria~ o post que " .
-		"eu peguei não tem imagem. Faz aí " . $com . " de novo!"
+		"text" => "Oops... Looks like the ~damn~ page " .
+		"I chose doesn't have any image attached to it. Please do " . $com . " again!"
 	);
 	$myJSON = json_encode($final);
 	 
