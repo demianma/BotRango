@@ -1,12 +1,25 @@
 <?php
+//BOTRANGO v. 1.3
+// 
+//Basicamente ele escolhe uma Subreddit com imagem e devolve para você.
+//
+//Quando tiver fome, é só ir em um chat privado ou canal e escrever /rango. 
+//Você ainda pode fazer sugestões como /rango pizza.
+
+
+$prefix = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://";
+$url = $prefix . $_SERVER['SERVER_NAME'] . substr($_SERVER['PHP_SELF'], 0, strrpos($_SERVER['PHP_SELF'], '/'));
 $input = ucfirst($_GET['text']);
 $command = $_GET['command'] . " " . $_GET['text'];
 $channel_id = $_GET["channel_id"];
 $user_name = $_GET["user_name"];
+$channel_name = $_Get["channel_name"];
 $datahoraf = date('d/m/Y h:m:s', time());
-$url = 'http://'.$_SERVER['HTTP_HOST'] . "/rango/";
+$team_domain = $_GET["team_domain"];
+$enterprise_name = $_GET["enterprise_name"];
 
-//lista de sites (remover esta lista se ativar o módulo de putaria)
+
+//lista de sites
 $fontes = [
 "Pizza" => "https://www.reddit.com/r/Pizza",
 "Carne" => "https://www.reddit.com/r/steak",
@@ -20,7 +33,8 @@ $fontes = [
 "Doce" => "https://www.reddit.com/r/DessertPorn",
 "Massa" => "https://www.reddit.com/r/pasta",
 "Crepe" => "https://www.reddit.com/r/Crepes",
-"Pão de alho" => "https://www.reddit.com/r/garlicbread/"
+"Pão de alho" => "https://www.reddit.com/r/garlicbread/",
+"Paleo" => "https://www.reddit.com/r/Paleo/"
 ];
 
 //compara o que o cidadao escreveu com a lista
@@ -67,16 +81,19 @@ else //0%
 $json = file_get_contents($url . ".json?limit=100"); //100 posts/pgna
 $post = cataPost($json); 
 
+
 //checa se há imagem e gera JSON. Se não, devolve json de erro
-if ($post['image_url'] == "" || $post['image_url'] == "self"){
-	devolveJSONruim($command);
-} else {
-	devolveJSON("Abrir original", $post['title_link'], $post['author_name'], 
-			    $post['author_link'], $post['image_url'], $mensagem);
+$i = 1; //limita while loop 100 posts 
+while ($i < 100 || $post['image_url'] == "" || $post['image_url'] == "self"){
+	$post = cataPost($json);
+	$i++;
+}
+devolveJSON("Abrir original", $post['title_link'], $post['author_name'], 
+	$post['author_link'], $post['image_url'], $mensagem);
 	
-	logger($datahoraf . " | " . $command . " | " . $user_name . 
-		   " | " . $channel_id . " | " . $post['title_link']);
-}	
+logger($datahoraf . " | " . $command . " | " . $user_name . 
+	" | " . $channel_id . " | " . $post['title_link']);
+
 	
 //cata post random
 function cataPost($j){
@@ -122,18 +139,8 @@ function devolveJSON($t, $tl, $an, $al, $iu, $txt){
 	echo $myJSON; 
 }
 
-//retorna json ruim - qdo não tem img
-function devolveJSONruim($com){
-	$final  = array(
-		"text" => "Ih... Parece que ~a porcaria~ o post que " .
-		"eu peguei não tem imagem. Faz aí " . $com . " de novo!"
-	);
-	$myJSON = json_encode($final);
-	 
-	header("Content-type:application/json");
-	echo $myJSON; 
-}
 
+//logger
 function logger($txt){
     $file = 'log.txt';
     $current = file_get_contents($file);
