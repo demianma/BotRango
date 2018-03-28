@@ -1,4 +1,13 @@
 <?php
+// BOTRANGO v. 1.3
+// Always in doubt of what to have for lunch today?! This is a slash 
+// command was created to help you decide what you’ll have for lunch!
+//
+// It’ll choose a random Subreddits picture and throw it back to you.
+//
+// Whenever you’re hungry, just go to a private chat or a channel and 
+// type /food. You can also make suggestions like /food pizza.
+
 $input = ucfirst($_GET['text']);
 $command = $_GET['command'] . " " . $_GET['text'];
 $channel_id = $_GET["channel_id"];
@@ -20,7 +29,8 @@ $fontes = [
 "Dessert" => "https://www.reddit.com/r/DessertPorn",
 "Pasta" => "https://www.reddit.com/r/pasta",
 "Crèpe" => "https://www.reddit.com/r/Crepes",
-"Garlic Bread" => "https://www.reddit.com/r/garlicbread/"
+"Garlic Bread" => "https://www.reddit.com/r/garlicbread/",
+"Paleo" => "https://www.reddit.com/r/Paleo/"
 ];
 
 //Compares the command attributes to the word list above
@@ -68,15 +78,17 @@ $json = file_get_contents($url . ".json?limit=100"); //100 posts/page
 $post = cataPost($json); 
 
 //check if there is any image and gen JSON. if not, reply with json error msg
-if ($post['image_url'] == "" || $post['image_url'] == "self"){
-	devolveJSONruim($command);
-} else {
-	devolveJSON("Open original", $post['title_link'], $post['author_name'], 
-			    $post['author_link'], $post['image_url'], $mensagem);
+$i = 1; //limit while loop to 100 posts 
+while ($i < 100 || $post['image_url'] == "" || $post['image_url'] == "self"){
+	$post = cataPost($json);
+	$i++;
+}
+devolveJSON("Abrir original", $post['title_link'], $post['author_name'], 
+	$post['author_link'], $post['image_url'], $mensagem);
 	
-	logger($datahoraf . " | " . $command . " | " . $user_name . 
-		   " | " . $channel_id . " | " . $post['title_link']);
-}	
+logger($datahoraf . " | " . $command . " | " . $user_name . 
+	" | " . $channel_id . " | " . $post['title_link']);
+	
 	
 //pick random
 function cataPost($j){
@@ -121,19 +133,7 @@ function devolveJSON($t, $tl, $an, $al, $iu, $txt){
 	header("Content-type:application/json");
 	echo $myJSON; 
 }
-
-//bad json return -  no image
-function devolveJSONruim($com){
-	$final  = array(
-		"text" => "Oops... Looks like the ~damn~ page " .
-		"I chose doesn't have any image attached to it. Please do " . $com . " again!"
-	);
-	$myJSON = json_encode($final);
-	 
-	header("Content-type:application/json");
-	echo $myJSON; 
-}
-
+//logger
 function logger($txt){
     $file = 'log.txt';
     $current = file_get_contents($file);
